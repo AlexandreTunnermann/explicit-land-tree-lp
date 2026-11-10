@@ -29,9 +29,23 @@
 html:has(.lp) { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html:has(.lp) { scroll-behavior: auto; } }
 
-:where(.lp) *, :where(.lp) *::before, :where(.lp) *::after { box-sizing: border-box; }
-:where(.lp) img { max-width: 100%; display: block; }
-:where(.lp) a { color: inherit; }
+/* Self-contained reset (the page does not depend on any template or Tailwind base styles). */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; tab-size: 4; line-height: 1.5; }
+body { margin: 0; line-height: inherit; }
+:where(.lp) *, :where(.lp) *::before, :where(.lp) *::after { box-sizing: border-box; border: 0 solid; margin: 0; padding: 0; }
+:where(.lp) img, :where(.lp) svg, :where(.lp) picture { display: block; vertical-align: middle; }
+:where(.lp) img { max-width: 100%; height: auto; }
+:where(.lp) a { color: inherit; text-decoration: inherit; }
+:where(.lp) b, :where(.lp) strong { font-weight: bolder; }
+:where(.lp) h1, :where(.lp) h2, :where(.lp) h3, :where(.lp) h4 { font-size: inherit; font-weight: inherit; }
+:where(.lp) ol, :where(.lp) ul { list-style: none; }
+:where(.lp) button, :where(.lp) input, :where(.lp) select, :where(.lp) textarea {
+  font: inherit; letter-spacing: inherit; color: inherit; background-color: transparent; border-radius: 0;
+}
+:where(.lp) button { cursor: pointer; }
+:where(.lp) input::placeholder { opacity: 1; }
+:where(.lp) summary { display: list-item; }
+:where(.lp) [hidden] { display: none; }
 :where(.lp) h1, :where(.lp) h2, :where(.lp) h3, :where(.lp) h4 { font-family: var(--lp-font-display); margin: 0; }
 :where(.lp) p { margin: 0; }
 :where(.lp) ul { margin: 0; padding: 0; list-style: none; }

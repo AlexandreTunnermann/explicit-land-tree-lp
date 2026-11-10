@@ -5,7 +5,6 @@ import { site } from "@/content/site";
 import { pushDL } from "@/lib/analytics";
 import { captureAttribution } from "@/lib/attribution";
 import { DEFAULT_GEO, type GeoResult } from "@/lib/geo-shared";
-import appCss from "@/styles/app.css?url";
 import lpCss from "@/styles/lp.css?url";
 
 const FONTS =
@@ -29,7 +28,6 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: FONTS },
-      { rel: "stylesheet", href: appCss },
       { rel: "stylesheet", href: lpCss },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
     ],
