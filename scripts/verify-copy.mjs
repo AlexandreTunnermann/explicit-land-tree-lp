@@ -1,0 +1,73 @@
+// Checks that every copied file is byte-identical to the original build (line endings ignored).
+// Run from the project root: node scripts/verify-copy.mjs
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+
+const EXPECTED = {
+  "public/favicon.svg": "07caf1d21d3a668cec769fdf6d4633c17b7ea37a160d7004e82de9f670713b23",
+  "src/components/EstimateForm.tsx": "9644aca68986014e789b2f4e2023b169151146e610db48ae61cd0a5c4efe4d25",
+  "src/components/lp/Button.tsx": "cfa2875f858eba3d326ad97a8ed8edef89f82425412b87176483d49a7032f74c",
+  "src/components/lp/CallLink.tsx": "d477c10332533e2b0cd933a835a910b37f461df76973dba82a320d260a7bd5b9",
+  "src/components/lp/Checks.tsx": "6094e29c27f023e57d816829d957f657595780acbbc975b58a9eb6ec5b8b862f",
+  "src/components/lp/CityName.tsx": "f23bc181a26cd8ff11234b33e953c6482a2fe0385a9ebda4cd09c351098ef912",
+  "src/components/lp/CtaPair.tsx": "b7817490d97ae9d6581ef6069642bc44c194d49deff62d759d74997a673967d7",
+  "src/components/lp/Footer.tsx": "99f267b282fa526ca21ff8e37c5c16e1207e9478cedb12b98a4f2cffc55f45c8",
+  "src/components/lp/GoogleG.tsx": "8451545d45bdd9e20e29f136edc409aa7dacb351e5d6efd98ebe999677cb69fc",
+  "src/components/lp/GoogleRatingBadge.tsx": "cb1e1f9d861577955dcd4828404a769f30c8ce58602e3e036d9ae34cc0804166",
+  "src/components/lp/Header.tsx": "be1653c478d569ce5e50f0ba82fef647974db5dbbcd31b29ce60d4758d2f7b22",
+  "src/components/lp/Section.tsx": "c99cf2e8c6228db96c5428b386024faa996ca79b0651cbc038302f94424446eb",
+  "src/components/lp/SectionHead.tsx": "233c9dbb5f10d815840136111a4736006d26d3d4ef0f7bbf60bc313109d7f5b6",
+  "src/components/lp/SlotImage.tsx": "17bff0daafce61f9262d51809e9d69dbf0998dae721bed87692aec9bd47127be",
+  "src/components/lp/Stars.tsx": "bba19c1bc95a8275305757d8af8f5c1ea04cac51196dee52b3a0604ae7fd8cca",
+  "src/components/lp/StickyCallBar.tsx": "61bb7871f43db8bbfdfe367094ec19a447c75bfa681b62cfa1dea54044c8aba0",
+  "src/components/sections/LandingA.tsx": "8f0ca60cc0c47e083aa58356d42d9e5b92d89af345117c2b033407df3fa1140a",
+  "src/components/sections/LandingB.tsx": "04120299a399ea5bc135517a685a64f7efb4b63543cdc58f5190d092cc1e27b5",
+  "src/components/sections/ReviewCard.tsx": "5cce31ff973566d5aa9376100165f5f7575277d310515676f8aaaf770cf02aeb",
+  "src/content/images.ts": "71b2a9241c881fedda117bc76e022f2557daf507051567d43b8a66f4f1948f69",
+  "src/content/site.ts": "513ebb18d9e858b12f97795e7d35f4fd1750622d87852e8cafff4da597ec3bab",
+  "src/lib/analytics.ts": "c37904116e9d248f2eec6949d6f02013069f769374e4eaadf56ddf61ffc03d5e",
+  "src/lib/attribution.ts": "7bb96ed1eea46eee2e1f19f0a1856334b10917f93be75fe7cf0f3ce5f2f313b5",
+  "src/lib/crm-fields.ts": "5e6f727a596ec9ee653050cb526f9c7cea3529a83b874b56fd7aa16993e300af",
+  "src/lib/crm-tracking.ts": "0813b0b24e7059e9b3e23daa8f63b8ec626f771309e2c376c9d63375413d06b2",
+  "src/lib/estimate-store.ts": "11f9349bd9042dd021ecf090fd10b367474040057c38b8fae2581ffda8358b01",
+  "src/lib/format.ts": "ce12c6179637e87026fc8f8c5834174a96dde4afcf58b0957e8906edf981b5a8",
+  "src/lib/geo-context.tsx": "8befab661f0ce11e15fd81aa7ad382e1c28d86ca874cdd99d1a687096928a6e9",
+  "src/lib/geo-shared.ts": "f19e2ba04da0d843a4538bab781e96cd33092e85ff3af7e6fcb9f6a6197f9792",
+  "src/lib/geo.ts": "23857dd1f3457644724213099951c5a0c5fb6eb59f4ea28a43cedb702c2164d0",
+  "src/lib/meta-capi.ts": "bd36c4b938b28f29969222a2f4bd3f3ed85b14507b456bf56e5f782367d60de1",
+  "src/lib/submit-lead.ts": "e4480ab36f557c6b2ea5c5a33487eaeba742099e4a050ac89eb35d45d61c4832",
+  "src/routes/__root.tsx": "70850b97f042f52560dd11408167ab5b0547668b7ab0e39eda81264ca11e1d83",
+  "src/routes/index.tsx": "a80e5e8ca4d822a2fceddf831d1a7cf8ce4ea7c4a105dab8fcb2b6299b24a526",
+  "src/routes/thank-you.tsx": "d3f22034c3d93420eb105dc627793273a800de2ca4aa8b442e3da1c9961cce3d",
+  "src/styles/app.css": "944e6e12c0067a6767836a78ad6c4095b829f966b44f33bc95cfef1401ab3c10",
+  "src/styles/lp.css": "bdea65359ea08b65e451e6167d60f03f10207f3091f78d9dc39bacb737713818",
+  "public/images/106__service-4.webp": "7ed07c07ec4442a444d793df7bcd9b29628b2ccc2f49463af0f5e86aa5872b1c",
+  "public/images/113__gallery-6.webp": "fd41a567f99b8568d28c04b18f540058db8cd179365fe2fa5de0da38d45ac56e",
+  "public/images/41__gallery-5.webp": "3e3cff840bc0241b0605937f474f94ccb93f973b5aa75390f818e26e570e00ca",
+  "public/images/42__gallery-3.webp": "81a4bcc57442d3916835507072f7caac160253e335f812f48af6863a015e0f47",
+  "public/images/43__about-work.webp": "ef904491801467aa14a9cedb4a3d9d1d1100b82e6e4853075efb1fcd27811c1d",
+  "public/images/49__service-3.webp": "0f3c119159f68bc05c77c21d6682181ba9161060b4854083db8bd75ea12b3a17",
+  "public/images/53__gallery-2.webp": "28e47fc29e72d9c6def9bd744011389737b034c0f2e11acb870476b54769f83e",
+  "public/images/55__service-2.webp": "f76089dafed2065a3b858628a9fad14b3d172587837244468fc019439123815b",
+  "public/images/89__signature.webp": "50b50103538ab1df4d2c5b62bd11f989d254f778f0b668ce9ad30e293d810788",
+  "public/images/ET-LOGO-1__logo.webp": "046a94779d9dbfb92c3df8373ef32e249fdc80b8c5d23b781c1638ae334234e4",
+  "public/images/IMG_4086__hero-mobile.webp": "0045b56802e2d189742fb174000d023ef101395f390f7fa5b3ee6dc2135a8df4",
+  "public/images/IMG_4086__hero.webp": "7f7c0d431db6232fcb67a461fca3725556c1332767f2ac5e015916d2b41b0c94",
+  "public/images/IMG_4126__service-1.webp": "d81683e2fbd8d1691c5e0398a5887884f81f390662c221e3d7ddab4a8dd79217",
+  "public/images/IMG_4207__gallery-1.webp": "0279b89f768d36bce9498f695ed12575163d910a1a9e566c92607aaed87e3fb2",
+  "public/images/IMG_7196__gallery-4.webp": "54050d34bebea7065569f79a5ea2c5707f7ee239912473c6cf9819862fcef16e",
+  "public/images/Logo-pdf__logo-light.webp": "ae2b599b155d53297f6e6db84804450bd623a25850788fd62087bcf25ebd9948",
+  "public/images/sadf-copy__owner.webp": "efc03edaa8eea039f36f5d203790695145b2e3f8ce261fff1fce73773a718cd7"
+};
+
+let bad = 0;
+for (const [file, hash] of Object.entries(EXPECTED)) {
+  if (!existsSync(file)) { console.log("MISSING  " + file); bad++; continue; }
+  const raw = readFileSync(file);
+  const data = file.startsWith("public/images/") ? raw : raw.toString("utf8").replace(/\r\n/g, "\n").replace(/\s+$/, "");
+  const got = createHash("sha256").update(data).digest("hex");
+  if (got !== hash) { console.log("CHANGED  " + file); bad++; }
+}
+const total = Object.keys(EXPECTED).length;
+console.log(bad === 0 ? `OK: all ${total} files are identical to the original build.` : `FAILED: ${bad} of ${total} files are missing or different.`);
+process.exit(bad === 0 ? 0 : 1);
